@@ -3,15 +3,8 @@ use std::{any::Any, collections::HashMap, fmt::Debug, fs};
 
 use anyhow::anyhow;
 use serde::Deserialize;
-use widget::weather::WeatherWidget;
+use widget::{weather::WeatherWidget, WidgetId};
 mod widget;
-
-/// Context is provided by the backend itself and has methods to for example retrieve secrets and create notifications, read configuration, store KV-like state across reruns?
-/// Functions for printing (if we cannot capture the output through the log crate)
-
-/// The unique ID of a widget (with a private value to make it non-instantiatable outside the platform itself )
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
-pub struct WidgetId(usize);
 
 // trait State: serde::Serialize + serde::Deserialize {}
 /// Yew component

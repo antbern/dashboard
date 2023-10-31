@@ -2,9 +2,11 @@ use std::{any::Any, collections::HashMap, marker::PhantomData, time::Instant};
 
 use serde::{Deserialize, Serialize};
 
-use crate::WidgetId;
-
 pub mod weather;
+
+/// The unique ID of a widget (with a private value to make it non-instantiatable outside the platform itself )
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+pub struct WidgetId(String);
 
 /// State Trait defines what is required for the widget state that will be shared with the frontend
 pub trait State: Serialize {}
@@ -55,6 +57,8 @@ pub struct BackendRun {
     result: Result<Option<String>, BackendError>,
 }
 
+/// BackendContext is provided by the backend itself and has methods to for example retrieve secrets and create notifications, read configuration, store KV-like state across reruns?
+/// Functions for printing (if we cannot capture the output through the log crate)
 pub struct BackendContext<'a> {
     /// The Id is needed to uniquely identify the backend/widget that is requesting the thing
     id: WidgetId,
@@ -64,7 +68,7 @@ pub struct BackendContext<'a> {
 impl<'a> BackendContext<'a> {
     pub fn get_state_or<S: Sized + 'static>(&'a mut self, or: S) -> &'a mut S {
         self.state
-            .entry(self.id)
+            .entry(self.id.clone())
             .or_insert(Box::new(or))
             .downcast_mut::<S>()
             .expect("Could not downcast backend state")
@@ -73,8 +77,10 @@ impl<'a> BackendContext<'a> {
 
 impl<C: WidgetBackend, S: State> WidgetDefinition<C, S> {
     pub fn run(&self, state: &mut HashMap<WidgetId, Box<dyn Any>>) -> BackendRun {
+        let id = WidgetId(self.id.clone());
+
         let mut ctx = BackendContext {
-            id: crate::WidgetId(0), //self.id.clone()),
+            id: id.clone(),
             state,
         };
 
@@ -84,11 +90,11 @@ impl<C: WidgetBackend, S: State> WidgetDefinition<C, S> {
         let end = Instant::now();
 
         // serialize the returned state
-        let result = result.map(|r| r.and_then(|v| Some(serde_json::to_string(&v).unwrap())));
+        let result = result.map(|r| r.map(|v| serde_json::to_string(&v).unwrap()));
 
         BackendRun {
             id: 0,
-            widget: crate::WidgetId(0), //self.id.clone()),
+            widget: id,
             initiated: Initiator::Manual,
             started: start,
             ended: end,
