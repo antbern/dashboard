@@ -1,0 +1,26 @@
+widgets:
+- !Weather
+  id: "weather_widget_unique_id"
+  # schedule: # automatic updates
+  #   cron: "5 4 * * *"
+  # secrets: # define which secrets that this will have access to
+  #  - weather_api_key
+  #  - another_service_key
+  # layout:
+  #   column: 3-5
+  #   row: 2
+  config: # custom configuration for this widget type
+    location: [56, 11.5]	
+
+- !Weather
+  id: "weather_widget_unique_id_two"
+  # schedule: # automatic updates
+  #   cron: "5 4 * * *"
+  # secrets: # define which secrets that this will have access to
+  #  - weather_api_key
+  #  - another_service_key
+  # layout:
+  #   column: 3-5
+  #   row: 2
+  config: # custom configuration for this widget type
+    location: [46, 4.5]	
