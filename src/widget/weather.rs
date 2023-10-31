@@ -1,19 +1,17 @@
-use std::any::Any;
-
 use serde::{Deserialize, Serialize};
 
-use super::{BackendContext, State, WidgetBackend};
+use super::{BackendContext, WidgetBackend, WidgetDefinition};
 
-#[derive(Debug)]
-pub struct WeatherWidget {}
+/// A test widget that returns the temperature!
+pub type WeatherWidget = WidgetDefinition<Config, Output>;
 
 #[derive(Debug, Deserialize)]
-pub struct WeatherWidgetConfig {
+pub struct Config {
     location: [f64; 2],
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct WeatherWidgetState {
+pub struct Output {
     temperature: f64,
 }
 
@@ -22,19 +20,19 @@ struct BackendState {
     value: f64,
 }
 
-impl WidgetBackend<WeatherWidgetConfig> for WeatherWidget {
-    type State = WeatherWidgetState;
+impl WidgetBackend for Config {
+    type Output = Output;
 
     fn run<'a>(
+        &self,
         ctx: &'a mut BackendContext<'a>,
-        config: &WeatherWidgetConfig,
-    ) -> Result<Option<Self::State>, super::BackendError> {
+    ) -> Result<Option<Self::Output>, super::BackendError> {
         let state: &mut BackendState =
             ctx.get_state_or::<BackendState>(BackendState { value: 0.0 });
 
-        dbg!(config);
+        dbg!(self);
 
-        let new = WeatherWidgetState {
+        let new = Output {
             temperature: state.value,
         };
 
@@ -43,21 +41,3 @@ impl WidgetBackend<WeatherWidgetConfig> for WeatherWidget {
         Ok(Some(new))
     }
 }
-
-// #[Backend(Weather)]
-// fn weather_backend<'a>(
-//     ctx: &'a mut BackendContext<'a>,
-//     config: &WeatherWidgetConfig,
-// ) -> Result<Option<Box<dyn Any>>, super::BackendError> {
-//     let state: &mut BackendState = ctx.get_state_or::<BackendState>(BackendState { value: 0.0 });
-
-//     dbg!(config);
-
-//     let new = WeatherWidgetState {
-//         temperature: state.value,
-//     };
-
-//     state.value += 1.0;
-
-//     Ok(Some(Box::new(new)))
-// }

@@ -1,12 +1,9 @@
-#![allow(unused, dead_code)]
-use std::{any::Any, collections::HashMap, fmt::Debug, fs, time::Instant};
+// #![allow(unused, dead_code)]
+use std::{any::Any, collections::HashMap, fmt::Debug, fs};
 
 use anyhow::anyhow;
 use serde::Deserialize;
-use widget::{
-    weather::{WeatherWidget, WeatherWidgetConfig, WeatherWidgetState},
-    BackendError, State, WidgetDefinition,
-};
+use widget::weather::WeatherWidget;
 mod widget;
 
 /// Context is provided by the backend itself and has methods to for example retrieve secrets and create notifications, read configuration, store KV-like state across reruns?
@@ -22,31 +19,14 @@ pub struct WidgetId(usize);
 trait WidgetFrontend {
     type State: Debug;
 
-    fn component(state: Self::State) -> ();
+    fn component(state: Self::State);
 }
 
 // TODO: how can we connect the backend, frontend and the state in a good way?
 
-#[derive(Debug)]
-enum Initiator {
-    Schedule,
-    Manual,
-}
-
-#[derive(Debug)]
-pub struct BackendRun {
-    id: usize,
-    widget: WidgetId,
-    initiated: Initiator,
-    started: Instant,
-    ended: Instant,
-    log: String,
-    result: Result<Option<String>, BackendError>,
-}
-
 #[derive(Debug, Deserialize)]
 enum WidgetEnum {
-    Weather(WidgetDefinition<WeatherWidgetConfig, WeatherWidget, WeatherWidgetState>),
+    Weather(WeatherWidget),
 }
 
 #[derive(Debug, Deserialize)]
@@ -77,31 +57,3 @@ fn main() -> Result<(), anyhow::Error> {
 
     Ok(())
 }
-
-// trait Tester {
-//     type A;
-//     type B: Debug;
-
-//     fn run(&self, config: Self::A) -> Self::B;
-// }
-
-// struct TesterOne {
-//     value: f32,
-// }
-
-// impl Tester for TesterOne {
-//     type A = i32;
-
-//     type B = bool;
-
-//     fn run(&self, config: Self::A) -> Self::B {
-//         false
-//     }
-// }
-
-// fn test() {
-//     let tone = TesterOne { value: 0.0 };
-
-//     let tester: Box<dyn Tester<A = i16, B = bool>> =
-//         Box::new(tone) as Box<dyn Tester<A = _, B = _>>;
-// }
