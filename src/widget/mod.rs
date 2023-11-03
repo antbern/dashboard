@@ -1,11 +1,12 @@
 use std::{any::Any, collections::HashMap, marker::PhantomData, time::Instant};
 
+use chrono::prelude::*;
 use serde::{Deserialize, Serialize};
 
 pub mod weather;
 
 /// The unique ID of a widget (with a private value to make it non-instantiatable outside the platform itself )
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Serialize, Deserialize)]
 pub struct WidgetId(String);
 
 /// State Trait defines what is required for the widget state that will be shared with the frontend
@@ -14,7 +15,7 @@ pub trait State: Serialize {}
 /// Blanket implementation for all types that implement Serialize
 impl<T: Serialize> State for T {}
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize, Clone, Copy)]
 pub enum BackendError {
     // TODO
 }
@@ -40,19 +41,22 @@ pub struct WidgetDefinition<C: WidgetBackend, S: State> {
     _state: PhantomData<S>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize, Clone, Copy)]
 enum Initiator {
     Schedule,
     Manual,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone, Copy)]
+pub struct RunId(pub usize);
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct BackendRun {
-    id: usize,
+    pub id: RunId,
     widget: WidgetId,
     initiated: Initiator,
-    started: Instant,
-    ended: Instant,
+    started: DateTime<Utc>,
+    ended: DateTime<Utc>,
     log: String,
     result: Result<Option<String>, BackendError>,
 }
@@ -62,11 +66,11 @@ pub struct BackendRun {
 pub struct BackendContext<'a> {
     /// The Id is needed to uniquely identify the backend/widget that is requesting the thing
     id: WidgetId,
-    state: &'a mut HashMap<WidgetId, Box<dyn Any>>,
+    state: &'a mut HashMap<WidgetId, Box<dyn Any + Sync + Send>>,
 }
 
 impl<'a> BackendContext<'a> {
-    pub fn get_state_or<S: Sized + 'static>(&'a mut self, or: S) -> &'a mut S {
+    pub fn get_state_or<S: Sized + Sync + Send + 'static>(&'a mut self, or: S) -> &'a mut S {
         self.state
             .entry(self.id.clone())
             .or_insert(Box::new(or))
@@ -76,7 +80,10 @@ impl<'a> BackendContext<'a> {
 }
 
 impl<C: WidgetBackend, S: State> WidgetDefinition<C, S> {
-    pub fn run(&self, state: &mut HashMap<WidgetId, Box<dyn Any>>) -> BackendRun {
+    pub fn id(&self) -> WidgetId {
+        WidgetId(self.id.clone())
+    }
+    pub fn run(&self, state: &mut HashMap<WidgetId, Box<dyn Any + Sync + Send>>) -> BackendRun {
         let id = WidgetId(self.id.clone());
 
         let mut ctx = BackendContext {
@@ -84,16 +91,16 @@ impl<C: WidgetBackend, S: State> WidgetDefinition<C, S> {
             state,
         };
 
-        let start = Instant::now();
+        let start = Utc::now();
         let result = self.config.run(&mut ctx);
 
-        let end = Instant::now();
+        let end = Utc::now();
 
         // serialize the returned state
         let result = result.map(|r| r.map(|v| serde_json::to_string(&v).unwrap()));
 
         BackendRun {
-            id: 0,
+            id: RunId(0),
             widget: id,
             initiated: Initiator::Manual,
             started: start,

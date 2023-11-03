@@ -1,33 +1,46 @@
 use axum::{
-    body::Bytes,
     extract::{Path, State},
     http::StatusCode,
+    response::IntoResponse,
     routing::get,
-    Router,
+    Json, Router,
 };
-use std::{collections::HashMap, net::SocketAddr, sync::Arc};
+use std::{any::Any, borrow::BorrowMut, collections::HashMap, net::SocketAddr, sync::Arc};
 use tokio::sync::RwLock;
 
-use crate::widget::{BackendRun, WidgetId};
+use crate::{
+    config::{Config, WidgetEnum},
+    database::{Database, DatabaseError, InMemoryDatabase},
+    widget::{BackendRun, RunId, WidgetId},
+};
 
-type SharedState = Arc<RwLock<AppState>>;
+// type SharedState = Arc<RwLock<AppState>>;
 
-#[derive(Default)]
+// #[derive(Default)]
 struct AppState {
-    runs: HashMap<WidgetId, Vec<BackendRun>>,
+    db: Arc<RwLock<dyn Database + Send + Sync>>,
+    widgets: Arc<Vec<WidgetEnum>>,
+    backend_state: Arc<RwLock<HashMap<WidgetId, Box<dyn Any + Send + Sync>>>>,
 }
 
 /// The main entrypoint for the Axum web server
-pub async fn launch_api() -> anyhow::Result<()> {
-    let shared_state = SharedState::default();
+pub async fn launch_api(config: Config) -> anyhow::Result<()> {
+    let shared_state = AppState {
+        db: Arc::new(RwLock::new(InMemoryDatabase::new())),
+        widgets: Arc::new(config.widgets),
+        backend_state: Arc::new(RwLock::new(HashMap::new())),
+    };
 
     // Build our application by composing routes
     let app = Router::new()
-        .route("/run/:key", get(get_run))
+        .route("/widget/:widget_id/run/:run_id", get(get_run))
+        .route("/widget/:widget_id/runs", get(get_runs))
+        .route("/widget/:widget_id/latest", get(get_last_run))
+        .route("/widget/:widget_id/trigger", get(trigger_widget_run))
         // .route("/keys", get(list_keys))
         // // Nest our admin routes under `/admin`
         // .nest("/admin", admin_routes())
-        .with_state(Arc::clone(&shared_state));
+        .with_state(Arc::new(shared_state));
 
     // Run our app with hyper
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
@@ -40,16 +53,75 @@ pub async fn launch_api() -> anyhow::Result<()> {
     Ok(())
 }
 
+#[axum::debug_handler]
 async fn get_run(
-    Path(key): Path<String>,
-    State(state): State<SharedState>,
-) -> Result<Bytes, StatusCode> {
-    let runs = &state.read().await.runs;
+    Path((widget_id, run_id)): Path<(WidgetId, RunId)>,
+    State(state): State<Arc<AppState>>,
+) -> Result<Json<BackendRun>, DatabaseError> {
+    let run = state.db.read().await.get_run(widget_id, run_id)?;
 
-    // if let Some(value) = db.get(&key) {
-    //     Ok(value.clone())
-    // } else {
-    //     Err(StatusCode::NOT_FOUND)
-    // }
-    Err(StatusCode::NOT_FOUND)
+    Ok(Json(run))
+}
+
+#[axum::debug_handler]
+async fn get_runs(
+    Path(widget_id): Path<WidgetId>,
+    State(state): State<Arc<AppState>>,
+) -> Result<Json<Vec<BackendRun>>, DatabaseError> {
+    let run = state.db.read().await.get_runs(widget_id)?;
+
+    Ok(Json(run))
+}
+
+#[axum::debug_handler]
+async fn get_last_run(
+    Path(widget_id): Path<WidgetId>,
+    State(state): State<Arc<AppState>>,
+) -> Result<Json<BackendRun>, DatabaseError> {
+    let run = state.db.read().await.get_last_run(widget_id)?;
+
+    Ok(Json(run))
+}
+
+#[axum::debug_handler]
+async fn trigger_widget_run(
+    Path(widget_id): Path<WidgetId>,
+    State(state): State<Arc<AppState>>,
+) -> Result<Json<RunId>, DatabaseError> {
+    // run the backend handler and store the result (on the main thread for now, not optimal)
+    // TODO: offload this responsibility to some background service
+
+    // find the widget (this is ridicoulously difficult haha)
+    let widgets: &WidgetEnum = state
+        .widgets
+        .iter()
+        .find(|w| {
+            let id = match w {
+                WidgetEnum::Weather(w) => w.id(),
+            };
+
+            id == widget_id
+        })
+        .ok_or(DatabaseError::InvalidWidgetId)?;
+
+    let mut backend_state = state.backend_state.write().await;
+
+    let run = match widgets {
+        WidgetEnum::Weather(w) => w.run(backend_state.borrow_mut()),
+    };
+
+    let id = state.db.write().await.insert_run(widget_id, run)?;
+
+    Ok(Json(id))
+}
+
+impl IntoResponse for DatabaseError {
+    fn into_response(self) -> axum::response::Response {
+        match self {
+            DatabaseError::InvalidRunId => (StatusCode::NOT_FOUND, "Invalid Run ID"),
+            DatabaseError::InvalidWidgetId => (StatusCode::NOT_FOUND, "Invalid Widget ID"),
+            DatabaseError::NoneAvailable => (StatusCode::NOT_FOUND, "No Runs available"),
+        }
+        .into_response()
+    }
 }

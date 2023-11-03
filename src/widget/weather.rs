@@ -30,8 +30,6 @@ impl WidgetBackend for Config {
         let state: &mut BackendState =
             ctx.get_state_or::<BackendState>(BackendState { value: 0.0 });
 
-        dbg!(self);
-
         let new = Output {
             temperature: state.value,
         };

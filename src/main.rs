@@ -9,6 +9,7 @@ use crate::config::WidgetEnum;
 
 mod api;
 mod config;
+mod database;
 mod widget;
 
 #[tokio::main]
@@ -22,8 +23,9 @@ async fn main() -> anyhow::Result<()> {
         .init();
 
     let config = config::load_config()?;
+
     // map with any for storing configuration?
-    let mut backend_state: HashMap<WidgetId, Box<dyn Any>> = HashMap::new();
+    let mut backend_state: HashMap<WidgetId, Box<dyn Any + Sync + Send>> = HashMap::new();
 
     for w in &config.widgets {
         let run = match w {
@@ -33,7 +35,7 @@ async fn main() -> anyhow::Result<()> {
         dbg!(&run);
     }
 
-    api::launch_api().await?;
+    api::launch_api(config).await?;
 
     Ok(())
 }
