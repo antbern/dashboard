@@ -1,0 +1,8 @@
+[build]
+target = "index.html"
+dist = "../dist"
+
+
+[[proxy]]
+# for development we need to proxy the api requests to the backend
+backend = "http://[::1]:3000/api/"
