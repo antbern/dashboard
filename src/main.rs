@@ -1,11 +1,6 @@
 // #![allow(unused, dead_code)]
 
-use std::{any::Any, collections::HashMap};
-
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
-use widget::WidgetId;
-
-use crate::config::WidgetEnum;
 
 mod api;
 mod config;
@@ -23,17 +18,6 @@ async fn main() -> anyhow::Result<()> {
         .init();
 
     let config = config::load_config()?;
-
-    // map with any for storing configuration?
-    let mut backend_state: HashMap<WidgetId, Box<dyn Any + Sync + Send>> = HashMap::new();
-
-    for w in &config.widgets {
-        let run = match w {
-            WidgetEnum::Weather(w) => w.run(&mut backend_state),
-        };
-
-        dbg!(&run);
-    }
 
     api::launch_api(config).await?;
 

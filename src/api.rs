@@ -5,13 +5,13 @@ use axum::{
     routing::get,
     Json, Router,
 };
-use std::{any::Any, borrow::BorrowMut, collections::HashMap, net::SocketAddr, sync::Arc};
+use std::{borrow::BorrowMut, net::SocketAddr, sync::Arc};
 use tokio::sync::RwLock;
 
 use crate::{
     config::{Config, WidgetEnum},
     database::{Database, DatabaseError, InMemoryDatabase},
-    widget::{BackendRun, RunId, WidgetId},
+    widget::{BackendRun, BackendStateStorage, RunId, WidgetId},
 };
 
 // type SharedState = Arc<RwLock<AppState>>;
@@ -20,7 +20,7 @@ use crate::{
 struct AppState {
     db: Arc<RwLock<dyn Database + Send + Sync>>,
     widgets: Arc<Vec<WidgetEnum>>,
-    backend_state: Arc<RwLock<HashMap<WidgetId, Box<dyn Any + Send + Sync>>>>,
+    backend_state: Arc<RwLock<BackendStateStorage>>,
 }
 
 /// The main entrypoint for the Axum web server
@@ -28,7 +28,7 @@ pub async fn launch_api(config: Config) -> anyhow::Result<()> {
     let shared_state = AppState {
         db: Arc::new(RwLock::new(InMemoryDatabase::new())),
         widgets: Arc::new(config.widgets),
-        backend_state: Arc::new(RwLock::new(HashMap::new())),
+        backend_state: Arc::new(RwLock::new(BackendStateStorage::new())),
     };
 
     // Build our application by composing routes
@@ -103,13 +103,13 @@ async fn trigger_widget_run(
             id == widget_id
         })
         .ok_or(DatabaseError::InvalidWidgetId)?;
+    let run = {
+        let mut backend_state = state.backend_state.write().await;
 
-    let mut backend_state = state.backend_state.write().await;
-
-    let run = match widgets {
-        WidgetEnum::Weather(w) => w.run(backend_state.borrow_mut()),
+        match widgets {
+            WidgetEnum::Weather(w) => w.run(backend_state.borrow_mut()),
+        }
     };
-
     let id = state.db.write().await.insert_run(widget_id, run)?;
 
     Ok(Json(id))

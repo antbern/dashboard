@@ -15,6 +15,14 @@ pub trait State: Serialize {}
 /// Blanket implementation for all types that implement Serialize
 impl<T: Serialize> State for T {}
 
+pub struct BackendStateStorage(HashMap<WidgetId, Box<dyn Any + Send + Sync>>);
+
+impl BackendStateStorage {
+    pub fn new() -> Self {
+        Self(HashMap::new())
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone, Copy)]
 pub enum BackendError {
     // TODO
@@ -66,12 +74,13 @@ pub struct BackendRun {
 pub struct BackendContext<'a> {
     /// The Id is needed to uniquely identify the backend/widget that is requesting the thing
     id: WidgetId,
-    state: &'a mut HashMap<WidgetId, Box<dyn Any + Sync + Send>>,
+    state: &'a mut BackendStateStorage,
 }
 
 impl<'a> BackendContext<'a> {
     pub fn get_state_or<S: Sized + Sync + Send + 'static>(&'a mut self, or: S) -> &'a mut S {
         self.state
+            .0
             .entry(self.id.clone())
             .or_insert(Box::new(or))
             .downcast_mut::<S>()
@@ -83,7 +92,7 @@ impl<C: WidgetBackend, S: State> WidgetDefinition<C, S> {
     pub fn id(&self) -> WidgetId {
         WidgetId(self.id.clone())
     }
-    pub fn run(&self, state: &mut HashMap<WidgetId, Box<dyn Any + Sync + Send>>) -> BackendRun {
+    pub fn run(&self, state: &mut BackendStateStorage) -> BackendRun {
         let id = WidgetId(self.id.clone());
 
         let mut ctx = BackendContext {
@@ -93,7 +102,6 @@ impl<C: WidgetBackend, S: State> WidgetDefinition<C, S> {
 
         let start = Utc::now();
         let result = self.config.run(&mut ctx);
-
         let end = Utc::now();
 
         // serialize the returned state
