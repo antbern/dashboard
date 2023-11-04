@@ -37,8 +37,8 @@ pub trait WidgetBackend {
     ) -> Result<Option<Self::Output>, BackendError>;
 }
 
-#[derive(Debug, Deserialize)]
-pub struct WidgetDefinition<C: WidgetBackend, S: State> {
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct WidgetDefinition<C: WidgetBackend + Serialize, S: State> {
     /// The unique ID of this widget
     id: String,
 
@@ -88,7 +88,7 @@ impl<'a> BackendContext<'a> {
     }
 }
 
-impl<C: WidgetBackend, S: State> WidgetDefinition<C, S> {
+impl<C: WidgetBackend + Serialize, S: State> WidgetDefinition<C, S> {
     pub fn id(&self) -> WidgetId {
         WidgetId(self.id.clone())
     }

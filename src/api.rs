@@ -33,6 +33,8 @@ pub async fn launch_api(config: Config) -> anyhow::Result<()> {
 
     // Build our application by composing routes
     let app = Router::new()
+        .route("/widgets", get(get_widgets))
+        .route("/widget/:widget_id", get(get_widget))
         .route("/widget/:widget_id/run/:run_id", get(get_run))
         .route("/widget/:widget_id/runs", get(get_runs))
         .route("/widget/:widget_id/latest", get(get_last_run))
@@ -51,6 +53,31 @@ pub async fn launch_api(config: Config) -> anyhow::Result<()> {
         .unwrap();
 
     Ok(())
+}
+
+#[axum::debug_handler]
+async fn get_widgets(State(state): State<Arc<AppState>>) -> Json<Vec<WidgetEnum>> {
+    Json(state.widgets.to_vec())
+}
+
+#[axum::debug_handler]
+async fn get_widget(
+    Path(widget_id): Path<WidgetId>,
+    State(state): State<Arc<AppState>>,
+) -> Result<Json<WidgetEnum>, DatabaseError> {
+    let widget: &WidgetEnum = state
+        .widgets
+        .iter()
+        .find(|w| {
+            let id = match w {
+                WidgetEnum::Weather(w) => w.id(),
+            };
+
+            id == widget_id
+        })
+        .ok_or(DatabaseError::InvalidWidgetId)?;
+
+    Ok(Json(widget.clone()))
 }
 
 #[axum::debug_handler]
@@ -92,7 +119,7 @@ async fn trigger_widget_run(
     // TODO: offload this responsibility to some background service
 
     // find the widget (this is ridicoulously difficult haha)
-    let widgets: &WidgetEnum = state
+    let widget: &WidgetEnum = state
         .widgets
         .iter()
         .find(|w| {
@@ -106,7 +133,7 @@ async fn trigger_widget_run(
     let run = {
         let mut backend_state = state.backend_state.write().await;
 
-        match widgets {
+        match widget {
             WidgetEnum::Weather(w) => w.run(backend_state.borrow_mut()),
         }
     };

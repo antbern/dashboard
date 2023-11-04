@@ -2,9 +2,9 @@ use std::fs;
 
 use crate::widget::weather::WeatherWidget;
 use anyhow::anyhow;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub enum WidgetEnum {
     Weather(WeatherWidget),
 }
