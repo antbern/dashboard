@@ -9,6 +9,8 @@ use common::{WidgetEnum, WidgetId};
 use std::{borrow::BorrowMut, net::SocketAddr, sync::Arc};
 use tokio::sync::RwLock;
 
+use tower_http::services::ServeDir;
+
 use crate::{
     config::Config,
     database::{Database, DatabaseError, InMemoryDatabase},
@@ -33,16 +35,19 @@ pub async fn launch_api(config: Config) -> anyhow::Result<()> {
     };
 
     // Build our application by composing routes
-    let app = Router::new()
+    let api_router = Router::new()
         .route("/widgets", get(get_widgets))
         .route("/widget/:widget_id", get(get_widget))
         .route("/widget/:widget_id/run/:run_id", get(get_run))
         .route("/widget/:widget_id/runs", get(get_runs))
         .route("/widget/:widget_id/latest", get(get_last_run))
-        .route("/widget/:widget_id/trigger", get(trigger_widget_run))
-        // .route("/keys", get(list_keys))
-        // // Nest our admin routes under `/admin`
-        // .nest("/admin", admin_routes())
+        .route("/widget/:widget_id/trigger", get(trigger_widget_run));
+
+    let app = Router::new()
+        .nest("/api", api_router)
+        // TODO: fallback to serving index.html for paths that were not found (to allow the yew SPA to work correctly)
+        // See: https://robert.kra.hn/posts/2022-04-03_rust-web-wasm/
+        .fallback_service(ServeDir::new("../dist").append_index_html_on_directories(true))
         .with_state(Arc::new(shared_state));
 
     // Run our app with hyper
