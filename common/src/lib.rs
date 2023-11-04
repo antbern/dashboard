@@ -15,8 +15,8 @@ pub trait State: Serialize {}
 /// Blanket implementation for all types that implement Serialize
 impl<T: Serialize> State for T {}
 
-#[derive(Debug, Deserialize, Serialize, Clone)]
-pub struct WidgetDefinition<C: Serialize, S: State> {
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq)]
+pub struct WidgetDefinition<C: Serialize + PartialEq, S: State> {
     /// The unique ID of this widget
     pub id: WidgetId,
 
@@ -39,12 +39,12 @@ pub mod weather {
     /// A test widget that returns the temperature!
     pub type Widget = WidgetDefinition<Config, Output>;
 
-    #[derive(Debug, Deserialize, Serialize, Clone)]
+    #[derive(Debug, Deserialize, Serialize, Clone, PartialEq)]
     pub struct Config {
         pub location: [f64; 2],
     }
 
-    #[derive(Debug, Deserialize, Serialize, Clone)]
+    #[derive(Debug, Deserialize, Serialize, Clone, PartialEq)]
     pub struct Output {
         pub temperature: f64,
     }

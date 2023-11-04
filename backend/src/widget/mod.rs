@@ -67,7 +67,7 @@ impl<'a> BackendContext<'a> {
     }
 }
 
-pub fn run<C: WidgetBackend + Serialize, S: State>(
+pub fn run<C: WidgetBackend + Serialize + PartialEq, S: State>(
     definition: &WidgetDefinition<C, S>,
     state: &mut BackendStateStorage,
 ) -> BackendRun {

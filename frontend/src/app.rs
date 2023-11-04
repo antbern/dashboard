@@ -1,3 +1,4 @@
+use common::WidgetEnum;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
@@ -29,7 +30,6 @@ pub fn app() -> Html {
     }
 }
 
-
 #[function_component(HelloServer)]
 fn hello_server() -> Html {
     let data = use_state(|| None);
@@ -49,7 +49,14 @@ fn hello_server() -> Html {
                                 resp.status_text()
                             ))
                         } else {
-                            resp.text().await.map_err(|err| err.to_string())
+                            // successful, get the text and try to parse it into the list of widgets
+                            resp.text()
+                                .await
+                                .map_err(|err| err.to_string())
+                                .and_then(|text| {
+                                    serde_json::from_str::<Vec<WidgetEnum>>(&text)
+                                        .map_err(|err| err.to_string())
+                                })
                         }
                     };
                     data.set(Some(result));
@@ -68,7 +75,16 @@ fn hello_server() -> Html {
         }
         Some(Ok(data)) => {
             html! {
-                <div>{"Got server response: "}{data}</div>
+                <div class="widgets">
+                {
+                    // construct the right component for each widget
+                    data.iter().map(|widget| {
+                        match widget {
+                            WidgetEnum::Weather(w) => html!{<WeatherWidget definition={w.clone()} />},
+                        }
+                    }).collect::<Html>()
+                }
+                </div>
             }
         }
         Some(Err(err)) => {
@@ -76,5 +92,20 @@ fn hello_server() -> Html {
                 <div>{"Error requesting data from server: "}{err}</div>
             }
         }
+    }
+}
+
+#[derive(Clone, PartialEq, Properties)]
+struct WeatherWidgetProps {
+    definition: common::weather::Widget,
+}
+
+#[function_component(WeatherWidget)]
+fn weather_widget(props: &WeatherWidgetProps) -> Html {
+    let WeatherWidgetProps { definition } = props;
+    // TODO: get the most recent run here, create a nicer looking UI etc
+
+    html! {
+        <div>{ "Weather!"} {format!("{:?}", definition.id)}</div>
     }
 }
