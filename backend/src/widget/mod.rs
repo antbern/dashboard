@@ -1,19 +1,10 @@
-use std::{any::Any, collections::HashMap, marker::PhantomData, time::Instant};
+use std::{any::Any, collections::HashMap};
 
 use chrono::prelude::*;
+use common::{State, WidgetDefinition, WidgetId};
 use serde::{Deserialize, Serialize};
 
 pub mod weather;
-
-/// The unique ID of a widget (with a private value to make it non-instantiatable outside the platform itself )
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Serialize, Deserialize)]
-pub struct WidgetId(String);
-
-/// State Trait defines what is required for the widget state that will be shared with the frontend
-pub trait State: Serialize {}
-
-/// Blanket implementation for all types that implement Serialize
-impl<T: Serialize> State for T {}
 
 pub struct BackendStateStorage(HashMap<WidgetId, Box<dyn Any + Send + Sync>>);
 
@@ -35,18 +26,6 @@ pub trait WidgetBackend {
         &self,
         ctx: &'a mut BackendContext<'a>,
     ) -> Result<Option<Self::Output>, BackendError>;
-}
-
-#[derive(Debug, Deserialize, Serialize, Clone)]
-pub struct WidgetDefinition<C: WidgetBackend + Serialize, S: State> {
-    /// The unique ID of this widget
-    id: String,
-
-    /// The configuration that belongs to this widget
-    config: C,
-
-    #[serde(skip)]
-    _state: PhantomData<S>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, Copy)]
@@ -88,33 +67,31 @@ impl<'a> BackendContext<'a> {
     }
 }
 
-impl<C: WidgetBackend + Serialize, S: State> WidgetDefinition<C, S> {
-    pub fn id(&self) -> WidgetId {
-        WidgetId(self.id.clone())
-    }
-    pub fn run(&self, state: &mut BackendStateStorage) -> BackendRun {
-        let id = WidgetId(self.id.clone());
+pub fn run<C: WidgetBackend + Serialize, S: State>(
+    definition: &WidgetDefinition<C, S>,
+    state: &mut BackendStateStorage,
+) -> BackendRun {
+    let id = definition.id.clone();
 
-        let mut ctx = BackendContext {
-            id: id.clone(),
-            state,
-        };
+    let mut ctx = BackendContext {
+        id: id.clone(),
+        state,
+    };
 
-        let start = Utc::now();
-        let result = self.config.run(&mut ctx);
-        let end = Utc::now();
+    let start = Utc::now();
+    let result = definition.config.run(&mut ctx);
+    let end = Utc::now();
 
-        // serialize the returned state
-        let result = result.map(|r| r.map(|v| serde_json::to_string(&v).unwrap()));
+    // serialize the returned state
+    let result = result.map(|r| r.map(|v| serde_json::to_string(&v).unwrap()));
 
-        BackendRun {
-            id: RunId(0),
-            widget: id,
-            initiated: Initiator::Manual,
-            started: start,
-            ended: end,
-            log: "".into(),
-            result,
-        }
+    BackendRun {
+        id: RunId(0),
+        widget: id,
+        initiated: Initiator::Manual,
+        started: start,
+        ended: end,
+        log: "".into(),
+        result,
     }
 }

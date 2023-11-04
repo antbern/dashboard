@@ -1,19 +1,6 @@
-use serde::{Deserialize, Serialize};
+use common::weather::{Config, Output};
 
-use super::{BackendContext, WidgetBackend, WidgetDefinition};
-
-/// A test widget that returns the temperature!
-pub type WeatherWidget = WidgetDefinition<Config, Output>;
-
-#[derive(Debug, Deserialize, Serialize, Clone)]
-pub struct Config {
-    location: [f64; 2],
-}
-
-#[derive(Debug, Deserialize, Serialize, Clone)]
-pub struct Output {
-    temperature: f64,
-}
+use super::{BackendContext, WidgetBackend};
 
 #[derive(Debug)]
 struct BackendState {

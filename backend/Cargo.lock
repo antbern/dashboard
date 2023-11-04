@@ -133,6 +133,7 @@ dependencies = [
  "anyhow",
  "axum",
  "chrono",
+ "common",
  "serde",
  "serde_json",
  "serde_yaml",
@@ -204,6 +205,13 @@ dependencies = [
  "serde",
  "wasm-bindgen",
  "windows-targets",
+]
+
+[[package]]
+name = "common"
+version = "0.1.0"
+dependencies = [
+ "serde",
 ]
 
 [[package]]

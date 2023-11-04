@@ -1,13 +1,8 @@
 use std::fs;
 
-use crate::widget::weather::WeatherWidget;
 use anyhow::anyhow;
-use serde::{Deserialize, Serialize};
-
-#[derive(Debug, Deserialize, Serialize, Clone)]
-pub enum WidgetEnum {
-    Weather(WeatherWidget),
-}
+use common::WidgetEnum;
+use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
 pub struct Config {

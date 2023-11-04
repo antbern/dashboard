@@ -5,13 +5,14 @@ use axum::{
     routing::get,
     Json, Router,
 };
+use common::{WidgetEnum, WidgetId};
 use std::{borrow::BorrowMut, net::SocketAddr, sync::Arc};
 use tokio::sync::RwLock;
 
 use crate::{
-    config::{Config, WidgetEnum},
+    config::Config,
     database::{Database, DatabaseError, InMemoryDatabase},
-    widget::{BackendRun, BackendStateStorage, RunId, WidgetId},
+    widget::{self, BackendRun, BackendStateStorage, RunId},
 };
 
 // type SharedState = Arc<RwLock<AppState>>;
@@ -70,10 +71,10 @@ async fn get_widget(
         .iter()
         .find(|w| {
             let id = match w {
-                WidgetEnum::Weather(w) => w.id(),
+                WidgetEnum::Weather(w) => &w.id,
             };
 
-            id == widget_id
+            *id == widget_id
         })
         .ok_or(DatabaseError::InvalidWidgetId)?;
 
@@ -124,17 +125,17 @@ async fn trigger_widget_run(
         .iter()
         .find(|w| {
             let id = match w {
-                WidgetEnum::Weather(w) => w.id(),
+                WidgetEnum::Weather(w) => &w.id,
             };
 
-            id == widget_id
+            *id == widget_id
         })
         .ok_or(DatabaseError::InvalidWidgetId)?;
     let run = {
         let mut backend_state = state.backend_state.write().await;
 
         match widget {
-            WidgetEnum::Weather(w) => w.run(backend_state.borrow_mut()),
+            WidgetEnum::Weather(w) => widget::run(w, backend_state.borrow_mut()),
         }
     };
     let id = state.db.write().await.insert_run(widget_id, run)?;
