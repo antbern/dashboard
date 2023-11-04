@@ -11,4 +11,10 @@ categories = ["gui", "wasm", "web-programming"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [dependencies]
+console_error_panic_hook = "0.1.7"
+gloo-net = "0.4.0"
+log = "0.4.20"
+wasm-bindgen-futures = "0.4.38"
+wasm-logger = "0.2.0"
 yew = { version="0.20", features=["csr"] }
+yew-router = "0.17.0"
