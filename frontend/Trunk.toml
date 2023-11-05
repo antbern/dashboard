@@ -1,0 +1,10 @@
+[build]
+target = "index.html"
+dist = "../dist"
+
+[serve]
+port=8081
+
+[[proxy]]
+# for development we need to proxy the api requests to the backend
+backend = "http://localhost:8080/api/"

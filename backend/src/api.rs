@@ -1,19 +1,24 @@
 use axum::{
+    body::{boxed, Body},
     extract::{Path, State},
-    http::StatusCode,
+    http::{Response, StatusCode},
     response::IntoResponse,
     routing::get,
     Json, Router,
 };
-use common::{WidgetEnum, WidgetId};
-use std::{borrow::BorrowMut, net::SocketAddr, sync::Arc};
-use tokio::sync::RwLock;
+use common::{backend::RunId, WidgetEnum, WidgetId};
+use std::{borrow::BorrowMut, net::SocketAddr, path::PathBuf, sync::Arc};
+use tokio::{fs, sync::RwLock};
+use tower::{ServiceBuilder, ServiceExt};
+
+use tower_http::{services::ServeDir, trace::TraceLayer};
 
 use crate::{
     config::Config,
     database::{Database, DatabaseError, InMemoryDatabase},
-    widget::{self, BackendRun, BackendStateStorage, RunId},
+    widget::{self, BackendStateStorage},
 };
+use common::backend::BackendRun;
 
 // type SharedState = Arc<RwLock<AppState>>;
 
@@ -33,20 +38,54 @@ pub async fn launch_api(config: Config) -> anyhow::Result<()> {
     };
 
     // Build our application by composing routes
-    let app = Router::new()
+    let api_router = Router::new()
         .route("/widgets", get(get_widgets))
         .route("/widget/:widget_id", get(get_widget))
         .route("/widget/:widget_id/run/:run_id", get(get_run))
         .route("/widget/:widget_id/runs", get(get_runs))
         .route("/widget/:widget_id/latest", get(get_last_run))
-        .route("/widget/:widget_id/trigger", get(trigger_widget_run))
-        // .route("/keys", get(list_keys))
-        // // Nest our admin routes under `/admin`
-        // .nest("/admin", admin_routes())
-        .with_state(Arc::new(shared_state));
+        .route("/widget/:widget_id/trigger", get(trigger_widget_run));
+
+    let app = Router::new()
+        .nest("/api", api_router)
+        // Fallback to serving index.html for paths that were not found (to allow the yew SPA to work correctly)
+        // See: https://robert.kra.hn/posts/2022-04-03_rust-web-wasm/
+        .fallback(get(|req| async move {
+            match ServeDir::new("../dist").oneshot(req).await {
+                Ok(res) => {
+                    let status = res.status();
+                    match status {
+                        StatusCode::NOT_FOUND => {
+                            let index_path = PathBuf::from("../dist").join("index.html");
+                            let index_content = match fs::read_to_string(index_path).await {
+                                Err(_) => {
+                                    return Response::builder()
+                                        .status(StatusCode::NOT_FOUND)
+                                        .body(boxed(Body::from("index file not found")))
+                                        .unwrap()
+                                }
+                                Ok(index_content) => index_content,
+                            };
+
+                            Response::builder()
+                                .status(StatusCode::OK)
+                                .body(boxed(Body::from(index_content)))
+                                .unwrap()
+                        }
+                        _ => res.map(boxed),
+                    }
+                }
+                Err(err) => Response::builder()
+                    .status(StatusCode::INTERNAL_SERVER_ERROR)
+                    .body(boxed(Body::from(format!("error: {err}"))))
+                    .expect("error response"),
+            }
+        }))
+        .with_state(Arc::new(shared_state))
+        .layer(ServiceBuilder::new().layer(TraceLayer::new_for_http()));
 
     // Run our app with hyper
-    let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
+    let addr = SocketAddr::from(([127, 0, 0, 1], 8080));
     tracing::debug!("listening on {}", addr);
     axum::Server::bind(&addr)
         .serve(app.into_make_service())

@@ -3,7 +3,7 @@ use std::collections::HashMap;
 
 use common::WidgetId;
 
-use crate::widget::{BackendRun, RunId};
+use common::backend::{BackendRun, RunId};
 // TODO: make a database specific version of the BackendRun that has the run ID in it (its an implementation specification and not needed for other logic)
 
 pub enum DatabaseError {
