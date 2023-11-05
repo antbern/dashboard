@@ -6,7 +6,7 @@ use axum::{
     routing::get,
     Json, Router,
 };
-use common::{WidgetEnum, WidgetId};
+use common::{backend::RunId, WidgetEnum, WidgetId};
 use std::{borrow::BorrowMut, net::SocketAddr, path::PathBuf, sync::Arc};
 use tokio::{fs, sync::RwLock};
 use tower::{ServiceBuilder, ServiceExt};
@@ -16,8 +16,9 @@ use tower_http::{services::ServeDir, trace::TraceLayer};
 use crate::{
     config::Config,
     database::{Database, DatabaseError, InMemoryDatabase},
-    widget::{self, BackendRun, BackendStateStorage, RunId},
+    widget::{self, BackendStateStorage},
 };
+use common::backend::BackendRun;
 
 // type SharedState = Arc<RwLock<AppState>>;
 

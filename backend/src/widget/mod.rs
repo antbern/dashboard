@@ -1,8 +1,11 @@
 use std::{any::Any, collections::HashMap};
 
 use chrono::prelude::*;
-use common::{State, WidgetDefinition, WidgetId};
-use serde::{Deserialize, Serialize};
+use common::{
+    backend::{BackendError, BackendRun, Initiator, RunId},
+    State, WidgetDefinition, WidgetId,
+};
+use serde::Serialize;
 
 pub mod weather;
 
@@ -14,11 +17,6 @@ impl BackendStateStorage {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, Copy)]
-pub enum BackendError {
-    // TODO
-}
-
 /// Backend that does all the computing etc
 pub trait WidgetBackend {
     type Output: State;
@@ -26,26 +24,6 @@ pub trait WidgetBackend {
         &self,
         ctx: &'a mut BackendContext<'a>,
     ) -> Result<Option<Self::Output>, BackendError>;
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone, Copy)]
-enum Initiator {
-    Schedule,
-    Manual,
-}
-
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone, Copy)]
-pub struct RunId(pub usize);
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct BackendRun {
-    pub id: RunId,
-    widget: WidgetId,
-    initiated: Initiator,
-    started: DateTime<Utc>,
-    ended: DateTime<Utc>,
-    log: String,
-    result: Result<Option<String>, BackendError>,
 }
 
 /// BackendContext is provided by the backend itself and has methods to for example retrieve secrets and create notifications, read configuration, store KV-like state across reruns?

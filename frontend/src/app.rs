@@ -1,4 +1,4 @@
-use common::WidgetEnum;
+use common::{backend::BackendRun, weather, WidgetEnum};
 use yew::prelude::*;
 use yew_router::prelude::*;
 
@@ -103,9 +103,80 @@ struct WeatherWidgetProps {
 #[function_component(WeatherWidget)]
 fn weather_widget(props: &WeatherWidgetProps) -> Html {
     let WeatherWidgetProps { definition } = props;
-    // TODO: get the most recent run here, create a nicer looking UI etc
+    // get the most recent run here,
+    // TODO: create a nicer looking UI etc
 
-    html! {
-        <div>{ "Weather!"} {format!("{:?}", definition.id)}</div>
+    let state = use_state(|| None);
+
+    // Request `/api/widgets` once
+    {
+        let state = state.clone();
+        let id = definition.id.clone();
+        use_effect(move || {
+            if state.is_none() {
+                spawn_local(async move {
+                    let resp = Request::get(&format!("/api/widget/{}/latest", id))
+                        .send()
+                        .await
+                        .unwrap();
+                    let result = {
+                        if !resp.ok() {
+                            Err(format!(
+                                "Error fetching data {} ({})",
+                                resp.status(),
+                                resp.status_text()
+                            ))
+                        } else {
+                            // successful, get the text and try to parse it into the list of widgets
+                            let result =
+                                resp.text()
+                                    .await
+                                    .map_err(|err| err.to_string())
+                                    .and_then(|text| {
+                                        serde_json::from_str::<BackendRun>(&text)
+                                            .map_err(|err| format!("{} content: {}", err, text))
+                                    });
+
+                            result.and_then(|run| {
+                                run.result
+                                    .map_err(|err| format!("Backend Error: {:?}", err))
+                                    .map(|r| {
+                                        r.map(|text| {
+                                            serde_json::from_str::<weather::Output>(&text).map_err(
+                                                |err| format!("{:?} content: {}", err, text),
+                                            )
+                                        })
+                                    })
+                            })
+                        }
+                    };
+                    state.set(Some(result));
+                });
+            }
+
+            || {}
+        });
+    }
+
+    match state.as_ref() {
+        None => {
+            html! {
+                <div>{"No server response"}</div>
+            }
+        }
+        Some(Ok(data)) => {
+            html! {
+                <div class="widgets">
+                {
+                    format!("{:?}", data)
+                }
+                </div>
+            }
+        }
+        Some(Err(err)) => {
+            html! {
+                <div>{"Error requesting data from server: "}{err}</div>
+            }
+        }
     }
 }

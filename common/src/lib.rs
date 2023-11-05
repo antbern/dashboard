@@ -1,7 +1,7 @@
 //! Contains types that are shared between the backend and the frontend
 //! such as Widget state definitions and the enums of all widget states etc.
-
-use std::marker::PhantomData;
+pub mod backend;
+use std::{fmt::Display, marker::PhantomData};
 
 use serde::{Deserialize, Serialize};
 
@@ -9,11 +9,19 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Serialize, Deserialize)]
 pub struct WidgetId(String);
 
+impl Display for WidgetId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
 /// State Trait defines what is required for the widget state that will be shared with the frontend
 pub trait State: Serialize {}
 
 /// Blanket implementation for all types that implement Serialize
 impl<T: Serialize> State for T {}
+
+// TODO: move BackendRun here...
 
 #[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq)]
 pub struct WidgetDefinition<C: Serialize + PartialEq, S: State> {
