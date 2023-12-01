@@ -30,6 +30,16 @@ pub fn app() -> Html {
     }
 }
 
+fn spinner() -> Html {
+    html! {
+        <svg class="animate-spin h-5 w-5 mr-3 ..." viewBox="0 0 24 24">
+            // from https://github.com/n3r4zzurr0/svg-spinners
+            <path xmlns="http://www.w3.org/2000/svg" d="M12,1A11,11,0,1,0,23,12,11,11,0,0,0,12,1Zm0,19a8,8,0,1,1,8-8A8,8,0,0,1,12,20Z" opacity=".25"/>
+            <path xmlns="http://www.w3.org/2000/svg" d="M10.14,1.16a11,11,0,0,0-9,8.92A1.59,1.59,0,0,0,2.46,12,1.52,1.52,0,0,0,4.11,10.7a8,8,0,0,1,6.66-6.61A1.42,1.42,0,0,0,12,2.69h0A1.57,1.57,0,0,0,10.14,1.16Z"/>
+        </svg>
+    }
+}
+
 fn view_card(title: &'static str, img_url: Option<&'static str>, content: Html) -> Html {
     html! {
         <div class="w-96 h-48 rounded bg-green-400 text-white p-6">
@@ -50,6 +60,7 @@ fn hello_server() -> Html {
     {
         let data = data.clone();
         use_effect(move || {
+            // only load the data once
             if data.is_none() {
                 spawn_local(async move {
                     let result = fetch_api::<Vec<WidgetEnum>>("widgets").await;
@@ -61,12 +72,20 @@ fn hello_server() -> Html {
         });
     }
 
-    let widgets = match data.as_ref() {
-        None => {
-            html! {
-                <div class="text-red">{"No server response"}</div>
-            }
+    let onclick = {
+        let data = data.clone();
+        move |_| {
+            let data = data.clone();
+            data.set(None);
+            spawn_local(async move {
+                let result = fetch_api::<Vec<WidgetEnum>>("widgets").await;
+                data.set(Some(result));
+            });
         }
+    };
+
+    let widgets = match data.as_ref() {
+        None => spinner(),
         Some(Ok(data)) => {
             html! {
                 {
@@ -95,6 +114,9 @@ fn hello_server() -> Html {
                 // {for links.iter().map(|(label, href)| html! {
                 //     <a class=link_classes href={*href}>{label}</a>
                 // })}
+                <button {onclick}>
+                    { "Refresh" }
+                </button>
             </div>
         </nav>
         <div class="bg-gray-50 flex-1 flex py-16 px-8 items-center gap-6 justify-center">
@@ -134,11 +156,7 @@ fn weather_widget(props: &WeatherWidgetProps) -> Html {
     }
 
     let content = match state.as_ref() {
-        None => {
-            html! {
-                <div>{"No server response"}</div>
-            }
-        }
+        None => spinner(),
         Some(Ok(data)) => {
             html! {
                 <div class="widgets">
