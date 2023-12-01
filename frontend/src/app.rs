@@ -30,6 +30,18 @@ pub fn app() -> Html {
     }
 }
 
+fn view_card(title: &'static str, img_url: Option<&'static str>, content: Html) -> Html {
+    html! {
+        <div class="w-96 h-48 rounded bg-green-400 text-white p-6">
+            {for img_url.map(|url| html! {
+                <img class="float-right w-12" src={url} alt="Logo" />
+            })}
+            <h1 class="text-4xl mb-8">{title}</h1>
+            {content}
+        </div>
+    }
+}
+
 #[function_component(HelloServer)]
 fn hello_server() -> Html {
     let data = use_state(|| None);
@@ -49,15 +61,14 @@ fn hello_server() -> Html {
         });
     }
 
-    match data.as_ref() {
+    let widgets = match data.as_ref() {
         None => {
             html! {
-                <div>{"No server response"}</div>
+                <div class="text-red">{"No server response"}</div>
             }
         }
         Some(Ok(data)) => {
             html! {
-                <div class="widgets">
                 {
                     // construct the right component for each widget
                     data.iter().map(|widget| {
@@ -66,14 +77,30 @@ fn hello_server() -> Html {
                         }
                     }).collect::<Html>()
                 }
-                </div>
             }
         }
         Some(Err(err)) => {
             html! {
-                <div>{"Error requesting data from server: "}{err}</div>
+                <div class="text-red">{"Error loading widgets: "}{err}</div>
             }
         }
+    };
+
+    html! {
+        <div class="flex flex-col h-screen">
+        <nav class="bg-green-400 h-16 px-8 py-2">
+            <div class="container flex mx-auto gap-6 items-center h-full">
+                <h1 class="font-bold text-2xl text-white">{"Dashboard"}</h1>
+                <div class="flex-1"></div>
+                // {for links.iter().map(|(label, href)| html! {
+                //     <a class=link_classes href={*href}>{label}</a>
+                // })}
+            </div>
+        </nav>
+        <div class="bg-gray-50 flex-1 flex py-16 px-8 items-center gap-6 justify-center">
+            { widgets }
+        </div>
+    </div>
     }
 }
 
@@ -106,7 +133,7 @@ fn weather_widget(props: &WeatherWidgetProps) -> Html {
         });
     }
 
-    match state.as_ref() {
+    let content = match state.as_ref() {
         None => {
             html! {
                 <div>{"No server response"}</div>
@@ -126,6 +153,10 @@ fn weather_widget(props: &WeatherWidgetProps) -> Html {
                 <div>{"Error requesting data from server: "}{err}</div>
             }
         }
+    };
+
+    html! {
+     {   view_card("Weather", None, content)}
     }
 }
 
