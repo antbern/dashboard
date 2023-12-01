@@ -1,8 +1,9 @@
-name: pr_check
+name: Build
 
 on:
   workflow_dispatch:
   push:
+    branches: [ main ]
   pull_request:
     branches: [ main ]
 
@@ -10,24 +11,46 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
+  build_frontend:
 
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v4
-    - name: install toolchain
-      uses: actions-rs/toolchain@v1
+    - uses: dtolnay/rust-toolchain@stable
       with:
-        toolchain: stable
-        target: wasm32-unknown-unknown
-        override: true
-        profile: minimal
+        components: clippy
+        targets: wasm32-unknown-unknown
+    
+    - name: Rust Cache # cache the rust build artefacts
+      uses: Swatinem/rust-cache@v2
+        
     - name: Install trunk
       uses: jetli/trunk-action@v0.4.0
       with:
         version: 'latest'
+
     - name: Build
       run: trunk build frontend/Trunk.toml
-    - name: Run tests
-      run: cargo test --verbose
+
+  build_backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        # with:
+        #   components: clippy
+      
+
+      - name: Rust Cache # cache the rust build artefacts
+        uses: Swatinem/rust-cache@v2
+
+      - name: Check
+        run: cargo check --all-features
+      - name: Build
+        run: cargo build
+      - name: Test
+        run: cargo test
+      # - name: Lint
+      #   run: cargo clippy -- -D warnings
+
