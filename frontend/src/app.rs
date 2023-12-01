@@ -1,4 +1,4 @@
-use common::{backend::BackendRun, weather, WidgetEnum};
+use common::{backend::BackendRun, weather, WidgetEnum, WidgetId};
 use yew::prelude::*;
 use yew_router::prelude::*;
 
@@ -40,25 +40,7 @@ fn hello_server() -> Html {
         use_effect(move || {
             if data.is_none() {
                 spawn_local(async move {
-                    let resp = Request::get("/api/widgets").send().await.unwrap();
-                    let result = {
-                        if !resp.ok() {
-                            Err(format!(
-                                "Error fetching data {} ({})",
-                                resp.status(),
-                                resp.status_text()
-                            ))
-                        } else {
-                            // successful, get the text and try to parse it into the list of widgets
-                            resp.text()
-                                .await
-                                .map_err(|err| err.to_string())
-                                .and_then(|text| {
-                                    serde_json::from_str::<Vec<WidgetEnum>>(&text)
-                                        .map_err(|err| err.to_string())
-                                })
-                        }
-                    };
+                    let result = fetch_api::<Vec<WidgetEnum>>("widgets").await;
                     data.set(Some(result));
                 });
             }
@@ -115,41 +97,7 @@ fn weather_widget(props: &WeatherWidgetProps) -> Html {
         use_effect(move || {
             if state.is_none() {
                 spawn_local(async move {
-                    let resp = Request::get(&format!("/api/widget/{}/latest", id))
-                        .send()
-                        .await
-                        .unwrap();
-                    let result = {
-                        if !resp.ok() {
-                            Err(format!(
-                                "Error fetching data {} ({})",
-                                resp.status(),
-                                resp.status_text()
-                            ))
-                        } else {
-                            // successful, get the text and try to parse it into the list of widgets
-                            let result =
-                                resp.text()
-                                    .await
-                                    .map_err(|err| err.to_string())
-                                    .and_then(|text| {
-                                        serde_json::from_str::<BackendRun>(&text)
-                                            .map_err(|err| format!("{} content: {}", err, text))
-                                    });
-
-                            result.and_then(|run| {
-                                run.result
-                                    .map_err(|err| format!("Backend Error: {:?}", err))
-                                    .map(|r| {
-                                        r.map(|text| {
-                                            serde_json::from_str::<weather::Output>(&text).map_err(
-                                                |err| format!("{:?} content: {}", err, text),
-                                            )
-                                        })
-                                    })
-                            })
-                        }
-                    };
+                    let result = fetch_widget_state::<weather::Output>(id, "latest").await;
                     state.set(Some(result));
                 });
             }
@@ -179,4 +127,45 @@ fn weather_widget(props: &WeatherWidgetProps) -> Html {
             }
         }
     }
+}
+
+async fn fetch_api<T: serde::de::DeserializeOwned>(endpoint: &str) -> Result<T, String> {
+    let resp = Request::get(&format!("/api/{}", endpoint))
+        .send()
+        .await
+        .unwrap();
+
+    if !resp.ok() {
+        Err(format!(
+            "Error fetching data {} ({})",
+            resp.status(),
+            resp.status_text()
+        ))
+    } else {
+        // successful, get the text and try to parse it into the list of widgets
+        resp.text()
+            .await
+            .map_err(|err| err.to_string())
+            .and_then(|text| {
+                serde_json::from_str::<T>(&text).map_err(|err| format!("{} content: {}", err, text))
+            })
+    }
+}
+
+async fn fetch_widget_state<O: serde::de::DeserializeOwned>(
+    id: WidgetId,
+    version: &str,
+) -> Result<Option<Result<O, String>>, String> {
+    let result = fetch_api::<BackendRun>(&format!("widget/{}/{}", id, version)).await;
+
+    result.and_then(|run| {
+        run.result
+            .map_err(|err| format!("Backend Error: {:?}", err))
+            .map(|r| {
+                r.map(|text| {
+                    serde_json::from_str::<O>(&text)
+                        .map_err(|err| format!("{:?} content: {}", err, text))
+                })
+            })
+    })
 }
