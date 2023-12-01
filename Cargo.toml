@@ -6,7 +6,7 @@ members = [
     "common",
     "frontend",
 ]
-# default-members = ["backend"]
+default-members = ["backend"]
 resolver = "2"
 
 [workspace.dependencies]

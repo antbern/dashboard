@@ -1,5 +1,5 @@
 use axum::{
-    body::{boxed, Body},
+    body::Body,
     extract::{Path, State},
     http::{Response, StatusCode},
     response::IntoResponse,
@@ -61,7 +61,7 @@ pub async fn launch_api(config: Config) -> anyhow::Result<()> {
                                 Err(_) => {
                                     return Response::builder()
                                         .status(StatusCode::NOT_FOUND)
-                                        .body(boxed(Body::from("index file not found")))
+                                        .body(Body::from("index file not found"))
                                         .unwrap()
                                 }
                                 Ok(index_content) => index_content,
@@ -69,15 +69,15 @@ pub async fn launch_api(config: Config) -> anyhow::Result<()> {
 
                             Response::builder()
                                 .status(StatusCode::OK)
-                                .body(boxed(Body::from(index_content)))
+                                .body(Body::from(index_content))
                                 .unwrap()
                         }
-                        _ => res.map(boxed),
+                        _ => res.map(Body::new),
                     }
                 }
                 Err(err) => Response::builder()
                     .status(StatusCode::INTERNAL_SERVER_ERROR)
-                    .body(boxed(Body::from(format!("error: {err}"))))
+                    .body(Body::from(format!("error: {err}")))
                     .expect("error response"),
             }
         }))
@@ -87,10 +87,9 @@ pub async fn launch_api(config: Config) -> anyhow::Result<()> {
     // Run our app with hyper
     let addr = SocketAddr::from(([127, 0, 0, 1], 8080));
     tracing::debug!("listening on {}", addr);
-    axum::Server::bind(&addr)
-        .serve(app.into_make_service())
-        .await
-        .unwrap();
+
+    let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
+    axum::serve(listener, app).await.unwrap();
 
     Ok(())
 }
