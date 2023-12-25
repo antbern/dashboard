@@ -29,4 +29,4 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 chrono = {workspace = true}
 serde = {workspace = true , features = ["derive"] }
 serde_json = {workspace = true}
-serde_yaml = "0.9.27"
+serde_yaml = "0.9.29"
