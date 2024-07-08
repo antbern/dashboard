@@ -12,7 +12,7 @@ resolver = "2"
 [workspace.dependencies]
 common = {path = "./common", version = "0.1.0"}
 
-serde = {version="1.0.200" }
+serde = {version="1.0.204" }
 
 serde_json = "1.0.116"
 
