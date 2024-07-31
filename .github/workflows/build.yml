@@ -31,7 +31,7 @@ jobs:
         version: 'latest'
 
     - name: Build
-      run: trunk build frontend/Trunk.toml
+      run: trunk build --config frontend/Trunk.toml
 
   build_backend:
     runs-on: ubuntu-latest
