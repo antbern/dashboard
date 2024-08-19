@@ -22,7 +22,7 @@ tower-http = { version = "0.5", features = [
     "fs",
     "trace",
 ] }
-tower-layer = "0.3.2"
+tower-layer = "0.3.3"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
