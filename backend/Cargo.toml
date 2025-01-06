@@ -11,7 +11,7 @@ common = { workspace = true }
 anyhow = "1.0"
 
 
-axum = { version = "0.7", features = ["macros"]}
+axum = { version = "0.8", features = ["macros"]}
 tokio = { version = "1.42", features = ["full"] }
 tower = { version = "0.5", features = ["util", "timeout", "load-shed", "limit"] }
 tower-http = { version = "0.6", features = [
