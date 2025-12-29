@@ -9,7 +9,7 @@ common = { workspace = true }
 
 console_error_panic_hook = "0.1.7"
 gloo-net = "0.6.0"
-log = "0.4.28"
+log = "0.4.29"
 wasm-bindgen-futures = "0.4.56"
 wasm-logger = "0.2.0"
 yew = { version="0.21.0", features=["csr"] }
