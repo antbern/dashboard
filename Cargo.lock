@@ -99,7 +99,7 @@ checksum = "604fde5e028fea851ce1d8570bbdc034bec850d157f7569d10f347d06808c05c"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.85",
+ "syn 2.0.113",
 ]
 
 [[package]]
@@ -236,7 +236,7 @@ dependencies = [
  "serde_json",
  "wasm-bindgen-futures",
  "wasm-logger",
- "yew",
+ "yew 0.22.0",
  "yew-router",
 ]
 
@@ -284,7 +284,7 @@ checksum = "87750cf4b7a4c0625b1529e4c543c2182106e4dedc60a2a6455e00d212c489ac"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.85",
+ "syn 2.0.113",
 ]
 
 [[package]]
@@ -366,6 +366,25 @@ dependencies = [
  "gloo-timers 0.3.0",
  "gloo-utils 0.2.0",
  "gloo-worker 0.4.0",
+]
+
+[[package]]
+name = "gloo"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d15282ece24eaf4bd338d73ef580c6714c8615155c4190c781290ee3fa0fd372"
+dependencies = [
+ "gloo-console 0.3.0",
+ "gloo-dialogs 0.2.0",
+ "gloo-events 0.2.0",
+ "gloo-file 0.3.0",
+ "gloo-history 0.2.2",
+ "gloo-net 0.5.0",
+ "gloo-render 0.2.0",
+ "gloo-storage 0.3.0",
+ "gloo-timers 0.3.0",
+ "gloo-utils 0.2.0",
+ "gloo-worker 0.5.0",
 ]
 
 [[package]]
@@ -470,7 +489,7 @@ dependencies = [
  "serde",
  "serde-wasm-bindgen 0.5.0",
  "serde_urlencoded",
- "thiserror",
+ "thiserror 1.0.63",
  "wasm-bindgen",
  "web-sys",
 ]
@@ -487,7 +506,7 @@ dependencies = [
  "serde",
  "serde-wasm-bindgen 0.6.5",
  "serde_urlencoded",
- "thiserror",
+ "thiserror 1.0.63",
  "wasm-bindgen",
  "web-sys",
 ]
@@ -507,7 +526,7 @@ dependencies = [
  "pin-project",
  "serde",
  "serde_json",
- "thiserror",
+ "thiserror 1.0.63",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
@@ -528,7 +547,28 @@ dependencies = [
  "pin-project",
  "serde",
  "serde_json",
- "thiserror",
+ "thiserror 1.0.63",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+]
+
+[[package]]
+name = "gloo-net"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "43aaa242d1239a8822c15c645f02166398da4f8b5c4bae795c1f5b44e9eee173"
+dependencies = [
+ "futures-channel",
+ "futures-core",
+ "futures-sink",
+ "gloo-utils 0.2.0",
+ "http 0.2.12",
+ "js-sys",
+ "pin-project",
+ "serde",
+ "serde_json",
+ "thiserror 1.0.63",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
@@ -549,7 +589,7 @@ dependencies = [
  "pin-project",
  "serde",
  "serde_json",
- "thiserror",
+ "thiserror 1.0.63",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
@@ -585,7 +625,7 @@ dependencies = [
  "js-sys",
  "serde",
  "serde_json",
- "thiserror",
+ "thiserror 1.0.63",
  "wasm-bindgen",
  "web-sys",
 ]
@@ -600,7 +640,7 @@ dependencies = [
  "js-sys",
  "serde",
  "serde_json",
- "thiserror",
+ "thiserror 1.0.63",
  "wasm-bindgen",
  "web-sys",
 ]
@@ -683,7 +723,26 @@ dependencies = [
  "js-sys",
  "pinned",
  "serde",
- "thiserror",
+ "thiserror 1.0.63",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+]
+
+[[package]]
+name = "gloo-worker"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "085f262d7604911c8150162529cefab3782e91adb20202e8658f7275d2aefe5d"
+dependencies = [
+ "bincode",
+ "futures",
+ "gloo-utils 0.2.0",
+ "gloo-worker-macros",
+ "js-sys",
+ "pinned",
+ "serde",
+ "thiserror 1.0.63",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
@@ -698,14 +757,14 @@ dependencies = [
  "proc-macro-crate",
  "proc-macro2",
  "quote",
- "syn 2.0.85",
+ "syn 2.0.113",
 ]
 
 [[package]]
 name = "hashbrown"
-version = "0.14.5"
+version = "0.16.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e5274423e17b7c9fc20b6e7e208532f9b19825d82dfd615708b70edd83df41f1"
+checksum = "841d1cc9bed7f9236f321df977030373f4a4163ae1a7dbfe1a51a2c1a51d9100"
 
 [[package]]
 name = "hermit-abi"
@@ -846,20 +905,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "implicit-clone"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1689b939ee35e3a075b0834b5672efd43aec8a6e81a1c6002b76a5ca2f211ae0"
+dependencies = [
+ "implicit-clone-derive",
+ "indexmap",
+]
+
+[[package]]
 name = "implicit-clone-derive"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9311685eb9a34808bbb0608ad2fcab9ae216266beca5848613e95553ac914e3b"
 dependencies = [
  "quote",
- "syn 2.0.85",
+ "syn 2.0.113",
 ]
 
 [[package]]
 name = "indexmap"
-version = "2.2.6"
+version = "2.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "168fb715dda47215e360912c096649d23d58bf392ac62f73919e831745e40f26"
+checksum = "0ad4bb2b565bca0645f4d68c5c9af97fba094e9791da685bf83cb5f3ce74acf2"
 dependencies = [
  "equivalent",
  "hashbrown",
@@ -1038,7 +1107,7 @@ checksum = "2f38a4412a78282e09a2cf38d195ea5420d15ba0602cb375210efbc877243965"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.85",
+ "syn 2.0.113",
 ]
 
 [[package]]
@@ -1061,7 +1130,7 @@ checksum = "a829027bd95e54cfe13e3e258a1ae7b645960553fb82b75ff852c29688ee595b"
 dependencies = [
  "futures",
  "rustversion",
- "thiserror",
+ "thiserror 1.0.63",
 ]
 
 [[package]]
@@ -1071,7 +1140,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5f12335488a2f3b0a83b14edad48dca9879ce89b2edd10e80237e4e852dd645e"
 dependencies = [
  "proc-macro2",
- "syn 2.0.85",
+ "syn 2.0.113",
 ]
 
 [[package]]
@@ -1110,9 +1179,9 @@ dependencies = [
 
 [[package]]
 name = "proc-macro2"
-version = "1.0.86"
+version = "1.0.104"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5e719e8df665df0d1c8fbfd238015744736151d4445ec0836b8e628aae103b77"
+checksum = "9695f8df41bb4f3d222c95a67532365f569318332d03d5f3f67f37b20e6ebdf0"
 dependencies = [
  "unicode-ident",
 ]
@@ -1242,7 +1311,7 @@ checksum = "d540f220d3187173da220f885ab66608367b6574e925011a9353e4badda91d79"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.85",
+ "syn 2.0.113",
 ]
 
 [[package]]
@@ -1348,9 +1417,9 @@ dependencies = [
 
 [[package]]
 name = "syn"
-version = "2.0.85"
+version = "2.0.113"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5023162dfcd14ef8f32034d8bcd4cc5ddc61ef7a247c024a33e24e1f24d21b56"
+checksum = "678faa00651c9eb72dd2020cbdf275d92eccb2400d568e419efdd64838145cb4"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1369,7 +1438,16 @@ version = "1.0.63"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c0342370b38b6a11b6cc11d6a805569958d54cfa061a29969c3b5ce2ea405724"
 dependencies = [
- "thiserror-impl",
+ "thiserror-impl 1.0.63",
+]
+
+[[package]]
+name = "thiserror"
+version = "2.0.17"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f63587ca0f12b72a0600bcba1d40081f830876000bb46dd2337a3051618f4fc8"
+dependencies = [
+ "thiserror-impl 2.0.17",
 ]
 
 [[package]]
@@ -1380,7 +1458,18 @@ checksum = "a4558b58466b9ad7ca0f102865eccc95938dca1a74a856f2b57b6629050da261"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.85",
+ "syn 2.0.113",
+]
+
+[[package]]
+name = "thiserror-impl"
+version = "2.0.17"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3ff15c8ecd7de3849db632e14d18d2571fa09dfc5ed93479bc4485c7a517c913"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.113",
 ]
 
 [[package]]
@@ -1418,7 +1507,7 @@ checksum = "af407857209536a95c8e56f8231ef2c2e2aff839b22e07a1ffcbc617e9db9fa5"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.85",
+ "syn 2.0.113",
 ]
 
 [[package]]
@@ -1443,6 +1532,23 @@ dependencies = [
  "futures-sink",
  "pin-project-lite",
  "tokio",
+]
+
+[[package]]
+name = "tokise"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "decf97738ce15b9e9cc1671ea29b0f6c56538719e1a092d19cc2134bf144e40e"
+dependencies = [
+ "futures",
+ "gloo 0.11.0",
+ "num_cpus",
+ "once_cell",
+ "pin-project",
+ "pinned",
+ "tokio",
+ "tokio-stream",
+ "wasm-bindgen-futures",
 ]
 
 [[package]]
@@ -1552,7 +1658,7 @@ checksum = "7490cfa5ec963746568740651ac6781f701c9c5ea257c58e057f3ba8cf69e8da"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.85",
+ "syn 2.0.113",
 ]
 
 [[package]]
@@ -1684,7 +1790,7 @@ dependencies = [
  "bumpalo",
  "proc-macro2",
  "quote",
- "syn 2.0.85",
+ "syn 2.0.113",
  "wasm-bindgen-shared",
 ]
 
@@ -1842,20 +1948,45 @@ dependencies = [
  "console_error_panic_hook",
  "futures",
  "gloo 0.10.0",
- "implicit-clone",
+ "implicit-clone 0.4.9",
  "indexmap",
  "js-sys",
  "prokio",
  "rustversion",
  "serde",
  "slab",
- "thiserror",
+ "thiserror 1.0.63",
  "tokio",
  "tracing",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
- "yew-macro",
+ "yew-macro 0.21.0",
+]
+
+[[package]]
+name = "yew"
+version = "0.22.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3346273ed61b636f5d84e6c696d40f380045b5565b36c5c47f8fc634b8bf5be6"
+dependencies = [
+ "console_error_panic_hook",
+ "futures",
+ "gloo 0.11.0",
+ "implicit-clone 0.6.0",
+ "indexmap",
+ "js-sys",
+ "rustversion",
+ "serde",
+ "slab",
+ "thiserror 2.0.17",
+ "tokio",
+ "tokise",
+ "tracing",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+ "yew-macro 0.22.0",
 ]
 
 [[package]]
@@ -1870,7 +2001,22 @@ dependencies = [
  "proc-macro-error",
  "proc-macro2",
  "quote",
- "syn 2.0.85",
+ "syn 2.0.113",
+]
+
+[[package]]
+name = "yew-macro"
+version = "0.22.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "479e94d645dde3749e81d488c1d32987509dd3b8c31650fcf6e3af1f370e913b"
+dependencies = [
+ "once_cell",
+ "prettyplease",
+ "proc-macro-error",
+ "proc-macro2",
+ "quote",
+ "rustversion",
+ "syn 2.0.113",
 ]
 
 [[package]]
@@ -1888,7 +2034,7 @@ dependencies = [
  "urlencoding",
  "wasm-bindgen",
  "web-sys",
- "yew",
+ "yew 0.21.0",
  "yew-router-macro",
 ]
 
@@ -1900,7 +2046,7 @@ checksum = "42bfd190a07ca8cfde7cd4c52b3ac463803dc07323db8c34daa697e86365978c"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.85",
+ "syn 2.0.113",
 ]
 
 [[package]]
